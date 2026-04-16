@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>橙色计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #fff3e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .calc-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(255, 150, 0, 0.2);
+            text-align: center;
+            width: 320px;
+        }
+        h1 {
+            color: #ff6600;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        input {
+            width: 100%;
+            height: 44px;
+            padding: 10px;
+            font-size: 18px;
+            border: 2px solid #ffcc80;
+            border-radius: 8px;
+            outline: none;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        input:focus {
+            border-color: #ff9800;
+        }
+        .btn-group {
+            margin: 10px 0;
+        }
+        button {
+            width: 60px;
+            height: 50px;
+            font-size: 20px;
+            margin: 6px;
+            border: none;
+            border-radius: 8px;
+            background-color: #ff9800;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #f57c00;
+        }
+        .result-area {
+            margin-top: 20px;
+            font-size: 22px;
+            color: #e65100;
+            font-weight: bold;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calc-box">
+    <h1>简易计算器</h1>
+    <input type="number" id="num1" placeholder="请输入第一个数字">
+    <input type="number" id="num2" placeholder="请输入第二个数字">
+
+    <div class="btn-group">
+        <button onclick="calc('+')">+</button>
+        <button onclick="calc('-')">-</button>
+        <button onclick="calc('*')">×</button>
+        <button onclick="calc('/')">÷</button>
+    </div>
+
+    <div class="result-area" id="result"></div>
+</div>
+
+<script>
+function calc(operator) {
+    let a = parseFloat(document.getElementById('num1').value);
+    let b = parseFloat(document.getElementById('num2').value);
+    let res;
+
+    if (isNaN(a) || isNaN(b)) {
+        document.getElementById('result').innerText = "请输入有效数字";
+        return;
+    }
+
+    switch (operator) {
+        case '+': res = a + b; break;
+        case '-': res = a - b; break;
+        case '*': res = a * b; break;
+        case '/':
+            if (b === 0) {
+                document.getElementById('result').innerText = "不能除以0";
+                return;
+            }
+            res = a / b;
+            break;
+    }
+
+    document.getElementById('result').innerText = "结果：" + res;
+}
+</script>
+
+</body>
+</html>
