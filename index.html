@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>橙色计算器</title>
+    <title>简易计算器</title>
     <style>
         * {
             margin: 0;
@@ -11,126 +11,157 @@
             font-family: Arial, sans-serif;
         }
         body {
-            background-color: #fff3e0;
+            background: #fff3e0;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
         }
-        .calc-box {
-            background: #fff;
+        .box {
+            background: white;
             padding: 30px;
             border-radius: 16px;
-            box-shadow: 0 6px 20px rgba(255, 150, 0, 0.2);
+            width: 340px;
             text-align: center;
-            width: 320px;
+            box-shadow: 0 6px 20px rgba(255,150,0,0.2);
         }
         h1 {
             color: #ff6600;
             margin-bottom: 20px;
-            font-size: 24px;
         }
         input {
             width: 100%;
             height: 44px;
+            margin: 6px 0;
             padding: 10px;
-            font-size: 18px;
             border: 2px solid #ffcc80;
             border-radius: 8px;
-            outline: none;
-            margin-bottom: 12px;
+            font-size: 16px;
             text-align: center;
-        }
-        input:focus {
-            border-color: #ff9800;
-        }
-        .btn-group {
-            margin: 10px 0;
         }
         button {
             width: 60px;
             height: 50px;
-            font-size: 20px;
             margin: 6px;
+            background: #ff9800;
+            color: white;
             border: none;
             border-radius: 8px;
-            background-color: #ff9800;
-            color: white;
+            font-size: 20px;
             cursor: pointer;
-            font-weight: bold;
         }
         button:hover {
-            background-color: #f57c00;
+            background: #f57c00;
         }
-        .result-area {
+        #result {
             margin-top: 20px;
             font-size: 22px;
             color: #e65100;
             font-weight: bold;
-            min-height: 30px;
+        }
+        .login {
+            margin-bottom: 15px;
         }
     </style>
 </head>
 <body>
 
-<div class="calc-box">
-    <h1>简易计算器</h1>
-    <input type="number" id="num1" placeholder="请输入第一个数字">
-    <input type="number" id="num2" placeholder="请输入第二个数字">
+<div class="box">
+    <h1>计算器</h1>
 
-    <div class="btn-group">
-        <button onclick="calc('+')">+</button>
-        <button onclick="calc('-')">-</button>
-        <button onclick="calc('*')">×</button>
-        <button onclick="calc('/')">÷</button>
+    <div class="login">
+        <input type="text" id="user" placeholder="用户名 test1"><br>
+        <input type="password" id="pwd" placeholder="密码 123456"><br>
+        <button onclick="login()">登录</button>
     </div>
 
-    <div class="result-area" id="result"></div>
+    <input type="number" id="n1" placeholder="数字1"><br>
+    <input type="number" id="n2" placeholder="数字2"><br>
+
+    <button onclick="go('+')">+</button>
+    <button onclick="go('-')">-</button>
+    <button onclick="go('*')">×</button>
+    <button onclick="go('/')">÷</button>
+
+    <div id="result"></div>
 </div>
 
 <script>
-// 👇 这里就是“可配置地址”，以后改域名只改这一行
-const API_BASE_URL = "http://localhost:8090/api";
+    // 后端地址（和你现在完全一致）
+    const URL = "http://localhost:8092/api";
+    let token = null;
+    let isVip = false;
 
-async function calc(operator) {
-    let a = parseFloat(document.getElementById('num1').value);
-    let b = parseFloat(document.getElementById('num2').value);
+    // 登录
+    async function login() {
+        let username = document.getElementById("user").value;
+        let password = document.getElementById("pwd").value;
 
-    if (isNaN(a) || isNaN(b)) {
-        document.getElementById('result').innerText = "请输入有效数字";
-        return;
-    }
-
-    // 除零判断（前端先挡一下）
-    if (operator === '/' && b === 0) {
-        document.getElementById('result').innerText = "除数不能为0";
-        return;
-    }
-
-    try {
-        // 
-        let res = await fetch(`${API_BASE_URL}/calc`, {
+        let res = await fetch(URL + "/login", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                num1: a,
-                num2: b,
-                operator: operator
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
         });
 
         let data = await res.json();
+        alert(data.msg);
+
         if (data.success) {
-            document.getElementById('result').innerText = "结果：" + data.result;
-        } else {
-            document.getElementById('result').innerText = data.msg || "计算失败";
+            token = data.token;
+            isVip = data.isVip;
         }
-    } catch (e) {
-        document.getElementById('result').innerText = "网络错误，请检查后端是否启动";
     }
-}
+
+    // 计算
+    async function go(op) {
+        let a = parseFloat(document.getElementById("n1").value);
+        let b = parseFloat(document.getElementById("n2").value);
+        let r = document.getElementById("result");
+
+        if (isNaN(a) || isNaN(b)) {
+            r.innerText = "请输入数字";
+            return;
+        }
+
+        // 权限
+        if (op === "*" && !token) {
+            r.innerText = "请先登录";
+            return;
+        }
+        if (op === "/" && !token) {
+            r.innerText = "请先登录";
+            return;
+        }
+        if (op === "/" && !isVip) {
+            r.innerText = "需要VIP";
+            return;
+        }
+
+        try {
+            let api = URL + "/calc";
+            let head = { "Content-Type": "application/json" };
+
+            if (op === "*") {
+                api = URL + "/calc/mul";
+                head.Authorization = "Bearer " + token;
+            }
+            if (op === "/") {
+                api = URL + "/calc/div";
+                head.Authorization = "Bearer " + token;
+            }
+
+            let res = await fetch(api, {
+                method: "POST",
+                headers: head,
+                body: JSON.stringify({ num1: a, num2: b, operator: op })
+            });
+
+            let data = await res.json();
+            r.innerText = data.success ? "结果：" + data.result : data.msg;
+        } catch (e) {
+            r.innerText = "网络错误";
+        }
+    }
 </script>
 
 </body>
